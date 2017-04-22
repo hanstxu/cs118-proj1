@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
 	memset(buffer, 0, BUFFER_SIZE * sizeof(char));
 	
 	ofstream file;
-	file.open("output", ios::out | ios::binary);
+	file.open(directory_name + "/1", ios::out | ios::binary);
 	
 	int size = recv(new_fd, buffer, BUFFER_SIZE, 0);
 	
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
 		file.write(buffer, size);
 		size = recv(new_fd, buffer, BUFFER_SIZE, 0);
 	}
-	
+
 	file.close();
 	
 	free(buffer);

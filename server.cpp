@@ -22,14 +22,20 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	
+	int port_num = stoi(argv[1]);
+	
+	if (port_num < 1024 || port_num > 65535) {
+		cerr << "Error: You must choose a port number between 1024 and 65535.\n";
+		exit(EXIT_FAILURE);
+	}
+	
+	string directory_name = argv[2];
+	
 	struct sigaction new_signal;
 	new_signal.sa_handler = sig_handler;
 	
 	sigaction(SIGQUIT, &new_signal, NULL);
 	sigaction(SIGTERM, &new_signal, NULL);
-	
-	int port_num = stoi(argv[1]);
-	string directory_name = argv[2];
 	
 	int status;
 	struct sockaddr_storage their_addr;
@@ -42,7 +48,7 @@ int main(int argc, char *argv[]) {
 	hints.ai_socktype = SOCK_STREAM;	// TCP stream sockets
 	hints.ai_flags = AI_PASSIVE;		// fill the IP in for me
 	
-	if ((status = getaddrinfo(NULL, "2000", &hints, &res)) != 0) {
+	if ((status = getaddrinfo(NULL, argv[1], &hints, &res)) != 0) {
 		cerr << "Error: getaddrinfo error - " << gai_strerror(status) << endl;
 		exit(EXIT_FAILURE);
 	}
@@ -65,9 +71,6 @@ int main(int argc, char *argv[]) {
 	addr_size = sizeof their_addr;
 	new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 	
-	while (1) {
-		
-	}
-	
+	while (1);
 	freeaddrinfo(res);		// free the linked list
 }

@@ -4,6 +4,10 @@
 #include <netdb.h>
 #include <string.h>		// for memset
 #include <stdexcept>	// invalid_argument
+#include <fcntl.h>		// for getting a file descriptor
+#include <unistd.h>		// for opening a file
+#include <sys/sendfile.h>	// for sendfile
+#include <sys/stat.h>	// for fstat to get the file size
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -26,8 +30,6 @@ int main(int argc, char* argv[]) {
 		cerr << "Error: You must choose a port number between 1024 and 65535.\n";
 		exit(EXIT_FAILURE);
 	}
-
-	string filename = argv[3];
 	
 	int status;
 	struct addrinfo hints;
@@ -49,16 +51,30 @@ int main(int argc, char* argv[]) {
 	int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 	
 	if (sockfd < 0) {
-		cerr << sockfd << endl;
+		cerr << "Error: unable to make a socket" << endl;
+		freeaddrinfo(servinfo);
+		exit(EXIT_FAILURE);
 	}
 	
 	// connect
 	status = connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
 	
 	if (status != 0) {
-		cerr << gai_strerror(status) << endl;
-		cerr << "connection error" << endl;
+		cerr << "Error: unable to connect" << endl;
+		freeaddrinfo(servinfo);
+		exit(EXIT_FAILURE);
 	}
+	
+	int fd = open(argv[3], O_RDONLY);
+	if (fd <0) {
+		cerr << "Error: couldn't open file" << endl;
+		freeaddrinfo(servinfo);
+		exit(EXIT_FAILURE);
+	}
+	
+	struct stat st;
+	fstat(fd, &st);
+	sendfile(sockfd, fd, NULL, st.st_size);
 	
 	freeaddrinfo(servinfo);
 }

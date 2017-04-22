@@ -7,6 +7,8 @@
 #include <string.h>		// for memset
 #include <signal.h>		// for signal handling
 #include <fstream>		// for file handling
+#include <thread>		// for multi-threading
+#include <vector>		// for an arbitrary number of threads
 using namespace std;
 
 #define BUFFER_SIZE 1024
@@ -17,6 +19,24 @@ void sig_handler(int sig_num) {
 	else if (sig_num == SIGTERM)
 		cout << "Received SIGTERM.\n";
 	exit(0);
+}
+
+void write_file(string dir, int count, int read_fd) {
+	char* buffer = (char*)malloc(BUFFER_SIZE * sizeof(char));
+	memset(buffer, 0, BUFFER_SIZE * sizeof(char));
+	
+	ofstream file;
+	file.open(dir + "/" + to_string(count), ios::out | ios::binary);
+	
+	int size = recv(read_fd, buffer, BUFFER_SIZE, 0);
+	
+	while (size > 0) {
+		file.write(buffer, size);
+		size = recv(read_fd, buffer, BUFFER_SIZE, 0);
+	}
+
+	file.close();
+	free(buffer);
 }
 
 int main(int argc, char *argv[]) {
@@ -32,7 +52,7 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	
-	string directory_name = argv[2];
+	string directory = argv[2];
 	
 	struct sigaction new_signal;
 	new_signal.sa_handler = sig_handler;
@@ -72,23 +92,19 @@ int main(int argc, char *argv[]) {
 	listen(sockfd, 1);
 	
 	addr_size = sizeof their_addr;
+	vector<thread> threads;
+	int num_connections = 0;
+	
 	new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 	
-	char* buffer = (char*)malloc(BUFFER_SIZE * sizeof(char));
-	memset(buffer, 0, BUFFER_SIZE * sizeof(char));
-	
-	ofstream file;
-	file.open(directory_name + "/1", ios::out | ios::binary);
-	
-	int size = recv(new_fd, buffer, BUFFER_SIZE, 0);
-	
-	while (size > 0) {
-		file.write(buffer, size);
-		size = recv(new_fd, buffer, BUFFER_SIZE, 0);
+	while (new_fd != -1) {
+		threads.push_back(thread(write_file, directory,  ++num_connections, new_fd));
+		new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 	}
-
-	file.close();
 	
-	free(buffer);
+	for (size_t i = 0; i < threads.size(); i++) {
+		threads[i].join();
+	}
+	
 	freeaddrinfo(res);		// free the linked list
 }

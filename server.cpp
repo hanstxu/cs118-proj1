@@ -9,6 +9,7 @@
 #include <fstream>		// for file handling
 #include <thread>		// for multi-threading
 #include <vector>		// for an arbitrary number of threads
+#include <stdexcept>	// invalid_argument
 using namespace std;
 
 #define BUFFER_SIZE 1024
@@ -45,7 +46,15 @@ int main(int argc, char *argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	
-	int port_num = stoi(argv[1]);
+	int port_num = 0;
+	
+	try {
+		port_num = stoi(argv[1]);
+	}
+	catch(const invalid_argument& ia) {
+		cerr << "Error: invalid argument - " << ia.what() << '\n';
+		exit(EXIT_FAILURE);
+	}
 	
 	if (port_num < 1024 || port_num > 65535) {
 		cerr << "Error: You must choose a port number between 1024 and 65535.\n";

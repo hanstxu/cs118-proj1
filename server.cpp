@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
 	int sockfd, new_fd;
 	
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;		// don't care about IPv4 or IPv6
+	hints.ai_family = AF_INET;			// support only IPv4 (36th post in piazza)
 	hints.ai_socktype = SOCK_STREAM;	// TCP stream sockets
 	hints.ai_flags = AI_PASSIVE;		// fill the IP in for me
 	
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 	new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 	
 	while (new_fd != -1) {
-		threads.push_back(thread(write_file, directory,  ++num_connections, new_fd));
+		threads.push_back(thread(write_file, directory, ++num_connections, new_fd));
 		new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 	}
 	

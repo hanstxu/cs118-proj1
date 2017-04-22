@@ -5,8 +5,11 @@
 #include <sys/socket.h>	// socket libraries
 #include <netdb.h>		// socket libraries
 #include <string.h>		// for memset
-#include <signal.h>
+#include <signal.h>		// for signal handling
+#include <fstream>		// for file handling
 using namespace std;
+
+#define BUFFER_SIZE 1024
 
 void sig_handler(int sig_num) {
 	if (sig_num == SIGQUIT)
@@ -71,6 +74,21 @@ int main(int argc, char *argv[]) {
 	addr_size = sizeof their_addr;
 	new_fd = accept(sockfd, (struct sockaddr *) &their_addr, &addr_size);
 	
-	while (1);
+	char* buffer = (char*)malloc(BUFFER_SIZE * sizeof(char));
+	memset(buffer, 0, BUFFER_SIZE * sizeof(char));
+	
+	ofstream file;
+	file.open("output", ios::out | ios::binary);
+	
+	int size = recv(new_fd, buffer, BUFFER_SIZE, 0);
+	
+	while (size > 0) {
+		file.write(buffer, size);
+		size = recv(new_fd, buffer, BUFFER_SIZE, 0);
+	}
+	
+	file.close();
+	
+	free(buffer);
 	freeaddrinfo(res);		// free the linked list
 }

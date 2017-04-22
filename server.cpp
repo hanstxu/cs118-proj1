@@ -5,13 +5,28 @@
 #include <sys/socket.h>	// socket libraries
 #include <netdb.h>		// socket libraries
 #include <string.h>		// for memset
+#include <signal.h>
 using namespace std;
+
+void sig_handler(int sig_num) {
+	if (sig_num == SIGQUIT)
+		cout << "Received SIGQUIT.\n";
+	else if (sig_num == SIGTERM)
+		cout << "Received SIGTERM.\n";
+	exit(0);
+}
 
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
 		cerr << "Error: You must give two arguments when initializing the server.\n";
 		exit(EXIT_FAILURE);
 	}
+	
+	struct sigaction new_signal;
+	new_signal.sa_handler = sig_handler;
+	
+	sigaction(SIGQUIT, &new_signal, NULL);
+	sigaction(SIGTERM, &new_signal, NULL);
 	
 	int port_num = stoi(argv[1]);
 	string directory_name = argv[2];

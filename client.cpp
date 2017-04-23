@@ -8,6 +8,8 @@
 #include <unistd.h>		// for opening a file
 #include <sys/sendfile.h>	// for sendfile
 #include <sys/stat.h>	// for fstat to get the file size
+#include <sys/select.h>	// using select for timeout
+#include <sys/time.h>	// for the timeval structure
 using namespace std;
 
 int main(int argc, char* argv[]) {
@@ -26,7 +28,7 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	
-	if (port_num < 1024 || port_num > 65535) {
+	if (port_num < 0 || port_num > 65535) {
 		cerr << "Error: You must choose a port number between 1024 and 65535.\n";
 		exit(EXIT_FAILURE);
 	}
@@ -49,32 +51,62 @@ int main(int argc, char* argv[]) {
 	
 	// make a socket
 	int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
-	
 	if (sockfd < 0) {
 		cerr << "Error: unable to make a socket" << endl;
 		freeaddrinfo(servinfo);
 		exit(EXIT_FAILURE);
 	}
 	
+	// Set non-blocking
+	long arg = fcntl(sockfd, F_GETFL, NULL);
+	arg |= O_NONBLOCK;
+	fcntl(sockfd, F_SETFL, arg);
+	
 	// connect
 	status = connect(sockfd, servinfo->ai_addr, servinfo->ai_addrlen);
+		
+	if (status < 0) {
+		if (errno == EINPROGRESS) {
+			struct timeval tv;
+			fd_set readfds;
 	
-	if (status != 0) {
-		cerr << "Error: unable to connect" << endl;
-		freeaddrinfo(servinfo);
-		exit(EXIT_FAILURE);
+			tv.tv_sec = 10;
+			tv.tv_usec = 0;
+			
+			FD_ZERO(&readfds);
+			FD_SET(sockfd, &readfds);
+			
+			select(sockfd + 1, &readfds, NULL, NULL, &tv);
+			
+			if (FD_ISSET(sockfd, &readfds)) {
+				int fd = open(argv[3], O_RDONLY);
+				if (fd <0) {
+					cerr << "Error: couldn't open file" << endl;
+					freeaddrinfo(servinfo);
+					close(fd);
+					close(sockfd);
+					exit(EXIT_FAILURE);
+				}
+				
+				struct stat st;
+				fstat(fd, &st);
+				sendfile(sockfd, fd, NULL, st.st_size);
+				close(fd);
+			}
+			else {
+				cerr << "Error: timeout connecting to server" << endl;
+				freeaddrinfo(servinfo);
+				close(sockfd);
+				exit(EXIT_FAILURE);
+			}
+		}
+		else {
+			cerr << "Error: " << strerror(errno) << endl;
+			freeaddrinfo(servinfo);
+			close(sockfd);
+			exit(EXIT_FAILURE);
+		}
 	}
-	
-	int fd = open(argv[3], O_RDONLY);
-	if (fd <0) {
-		cerr << "Error: couldn't open file" << endl;
-		freeaddrinfo(servinfo);
-		exit(EXIT_FAILURE);
-	}
-	
-	struct stat st;
-	fstat(fd, &st);
-	sendfile(sockfd, fd, NULL, st.st_size);
 	
 	freeaddrinfo(servinfo);
 	close(sockfd);

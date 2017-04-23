@@ -27,7 +27,7 @@ void write_file(string dir, int count, int read_fd) {
 	memset(buffer, 0, BUFFER_SIZE * sizeof(char));
 	
 	ofstream file;
-	file.open(dir + "/" + to_string(count), ios::out | ios::binary);
+	file.open(dir + "/" + to_string(count) + ".file", ios::out | ios::binary);
 	
 	int size = recv(read_fd, buffer, BUFFER_SIZE, 0);
 	

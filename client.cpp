@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 		exit(EXIT_FAILURE);
 	}
 	
-	if (port_num < 0 || port_num > 65535) {
+	if (port_num < 1023 || port_num > 65535) {
 		cerr << "Error: You must choose a port number between 1024 and 65535.\n";
 		exit(EXIT_FAILURE);
 	}
@@ -68,32 +68,17 @@ int main(int argc, char* argv[]) {
 	if (status < 0) {
 		if (errno == EINPROGRESS) {
 			struct timeval tv;
-			fd_set readfds;
+			fd_set writefds;
 	
-			tv.tv_sec = 10;
+			tv.tv_sec = 1;
 			tv.tv_usec = 0;
 			
-			FD_ZERO(&readfds);
-			FD_SET(sockfd, &readfds);
+			FD_ZERO(&writefds);
+			FD_SET(sockfd, &writefds);
 			
-			select(sockfd + 1, &readfds, NULL, NULL, &tv);
+			select(sockfd + 1, NULL, &writefds, NULL, &tv);
 			
-			if (FD_ISSET(sockfd, &readfds)) {
-				int fd = open(argv[3], O_RDONLY);
-				if (fd <0) {
-					cerr << "Error: couldn't open file" << endl;
-					freeaddrinfo(servinfo);
-					close(fd);
-					close(sockfd);
-					exit(EXIT_FAILURE);
-				}
-				
-				struct stat st;
-				fstat(fd, &st);
-				sendfile(sockfd, fd, NULL, st.st_size);
-				close(fd);
-			}
-			else {
+			if (!FD_ISSET(sockfd, &writefds)) {
 				cerr << "Error: timeout connecting to server" << endl;
 				freeaddrinfo(servinfo);
 				close(sockfd);
@@ -107,6 +92,20 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 	}
+	
+	int fd = open(argv[3], O_RDONLY);
+	if (fd <0) {
+		cerr << "Error: couldn't open file" << endl;
+		freeaddrinfo(servinfo);
+		close(fd);
+		close(sockfd);
+		exit(EXIT_FAILURE);
+	}
+	
+	struct stat st;
+	fstat(fd, &st);
+	sendfile(sockfd, fd, NULL, st.st_size);
+	close(fd);
 	
 	freeaddrinfo(servinfo);
 	close(sockfd);

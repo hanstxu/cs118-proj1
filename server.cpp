@@ -10,9 +10,13 @@
 #include <thread>		// for multi-threading
 #include <vector>		// for an arbitrary number of threads
 #include <stdexcept>	// invalid_argument
+#include <sys/select.h>	// using select for timeout
+#include <sys/time.h>	// for the timeval structure
+#include <unistd.h>		// for close() to close a file descriptor
 using namespace std;
 
 #define BUFFER_SIZE 1024
+#define ERROR_SIZE 5
 
 void sig_handler(int sig_num) {
 	if (sig_num == SIGQUIT)
@@ -22,6 +26,7 @@ void sig_handler(int sig_num) {
 	exit(0);
 }
 
+// TODO: close the file descriptor
 void write_file(string dir, int count, int read_fd) {
 	char* buffer = (char*)malloc(BUFFER_SIZE * sizeof(char));
 	memset(buffer, 0, BUFFER_SIZE * sizeof(char));
@@ -29,15 +34,33 @@ void write_file(string dir, int count, int read_fd) {
 	ofstream file;
 	file.open(dir + "/" + to_string(count) + ".file", ios::out | ios::binary);
 	
-	int size = recv(read_fd, buffer, BUFFER_SIZE, 0);
+	struct timeval tv;
+	fd_set readfds;
 	
-	while (size > 0) {
-		file.write(buffer, size);
-		size = recv(read_fd, buffer, BUFFER_SIZE, 0);
+	tv.tv_sec = 10;
+	tv.tv_usec = 0;
+	
+	FD_ZERO(&readfds);
+	FD_SET(read_fd, &readfds);
+	
+	select(read_fd + 1, &readfds, NULL, NULL, &tv);
+	
+	if (FD_ISSET(read_fd, &readfds)) {
+		int size = recv(read_fd, buffer, BUFFER_SIZE, 0);
+		
+		while (size > 0) {
+			file.write(buffer, size);
+			size = recv(read_fd, buffer, BUFFER_SIZE, 0);
+		}
+	}
+	else {
+		memcpy(buffer, "ERROR", ERROR_SIZE * sizeof(char));
+		file.write(buffer, ERROR_SIZE);
 	}
 
 	file.close();
 	free(buffer);
+	close(read_fd);
 }
 
 int main(int argc, char *argv[]) {
@@ -116,4 +139,6 @@ int main(int argc, char *argv[]) {
 	}
 	
 	freeaddrinfo(res);		// free the linked list
+	
+	return 0;
 }

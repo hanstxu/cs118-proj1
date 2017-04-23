@@ -77,4 +77,7 @@ int main(int argc, char* argv[]) {
 	sendfile(sockfd, fd, NULL, st.st_size);
 	
 	freeaddrinfo(servinfo);
+	close(sockfd);
+	
+	return 0;
 }

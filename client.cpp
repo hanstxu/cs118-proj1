@@ -70,7 +70,7 @@ int main(int argc, char* argv[]) {
 			struct timeval tv;
 			fd_set writefds;
 	
-			tv.tv_sec = 1;
+			tv.tv_sec = 10;
 			tv.tv_usec = 0;
 			
 			FD_ZERO(&writefds);
@@ -92,6 +92,10 @@ int main(int argc, char* argv[]) {
 			exit(EXIT_FAILURE);
 		}
 	}
+	
+	arg = fcntl(sockfd, F_GETFL, NULL);
+	arg &= (~O_NONBLOCK);
+	fcntl(sockfd, F_SETFL, arg);
 	
 	int fd = open(argv[3], O_RDONLY);
 	if (fd <0) {

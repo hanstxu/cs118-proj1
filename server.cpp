@@ -28,7 +28,7 @@ void sig_handler(int sig_num) {
 
 // TODO: close the file descriptor
 void write_file(string dir, int count, int read_fd) {
-	char* buffer = (char*)malloc(BUFFER_SIZE * sizeof(char));
+	char* buffer = new char[BUFFER_SIZE];
 	memset(buffer, 0, BUFFER_SIZE * sizeof(char));
 	
 	ofstream file;
@@ -59,7 +59,7 @@ void write_file(string dir, int count, int read_fd) {
 	}
 
 	file.close();
-	free(buffer);
+	delete buffer;
 	close(read_fd);
 }
 

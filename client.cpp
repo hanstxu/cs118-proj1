@@ -113,30 +113,37 @@ int main(int argc, char* argv[]) {
 	int num_bytes = fread(buffer, sizeof(char), BUFFER_SIZE, filp);
 	
 	while (num_bytes > 0) {
+		struct timeval tv;
+		fd_set writefds;
+
+		tv.tv_sec = 10;
+		tv.tv_usec = 0;
+		
 		send(sockfd, buffer, num_bytes, 0);
+		
+		FD_ZERO(&writefds);
+		FD_SET(sockfd, &writefds);
+		
+		select(sockfd + 1, NULL, &writefds, NULL, &tv);
+		
+		if (!FD_ISSET(sockfd, &writefds)) {
+			cerr << "ERROR: timeout writing to socket in send" << endl;
+			delete buffer;
+			fclose(filp);
+			freeaddrinfo(servinfo);
+			close(sockfd);
+			exit(EXIT_FAILURE);
+		}
+		
 		num_bytes = fread(buffer, sizeof(char), BUFFER_SIZE, filp);
 	}
 	
 	delete buffer;
 	fclose(filp);
-	/*
-	int fd = open(argv[3], O_RDONLY);
-	if (fd <0) {
-		cerr << "ERROR: couldn't open file" << endl;
-		freeaddrinfo(servinfo);
-		close(fd);
-		close(sockfd);
-		exit(EXIT_FAILURE);
-	}
-	
-	struct stat st;
-	fstat(fd, &st);
-	sendfile(sockfd, fd, NULL, st.st_size);
-	close(fd);
-	*/
 	
 	freeaddrinfo(servinfo);
 	close(sockfd);
 	
+	cerr << "SUCCESS!" << endl;
 	return 0;
 }

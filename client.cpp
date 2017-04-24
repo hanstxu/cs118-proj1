@@ -10,7 +10,11 @@
 #include <sys/stat.h>	// for fstat to get the file size
 #include <sys/select.h>	// using select for timeout
 #include <sys/time.h>	// for the timeval structure
+#include <stdio.h>		// for FILE objects
+#include <cstdio>		// for file reading
 using namespace std;
+
+#define BUFFER_SIZE 1024
 
 int main(int argc, char* argv[]) {
 	if (argc != 4) {
@@ -97,6 +101,25 @@ int main(int argc, char* argv[]) {
 	arg &= (~O_NONBLOCK);
 	fcntl(sockfd, F_SETFL, arg);
 	
+	FILE* filp = fopen(argv[3], "rb");
+	if (!filp) {
+		cerr << "ERROR: could not open file " << argv[3] << endl;
+		freeaddrinfo(servinfo);
+		close(sockfd);
+		exit(EXIT_FAILURE);
+	}
+	
+	char* buffer = new char[BUFFER_SIZE];
+	int num_bytes = fread(buffer, sizeof(char), BUFFER_SIZE, filp);
+	
+	while (num_bytes > 0) {
+		send(sockfd, buffer, num_bytes, 0);
+		num_bytes = fread(buffer, sizeof(char), BUFFER_SIZE, filp);
+	}
+	
+	delete buffer;
+	fclose(filp);
+	/*
 	int fd = open(argv[3], O_RDONLY);
 	if (fd <0) {
 		cerr << "ERROR: couldn't open file" << endl;
@@ -110,6 +133,7 @@ int main(int argc, char* argv[]) {
 	fstat(fd, &st);
 	sendfile(sockfd, fd, NULL, st.st_size);
 	close(fd);
+	*/
 	
 	freeaddrinfo(servinfo);
 	close(sockfd);

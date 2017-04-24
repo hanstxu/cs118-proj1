@@ -65,7 +65,7 @@ void write_file(string dir, int count, int read_fd) {
 
 int main(int argc, char *argv[]) {
 	if (argc != 3) {
-		cerr << "Error: You must give two arguments when initializing the server.\n";
+		cerr << "ERROR: You must give two arguments when initializing the server.\n";
 		exit(EXIT_FAILURE);
 	}
 	
@@ -75,12 +75,12 @@ int main(int argc, char *argv[]) {
 		port_num = stoi(argv[1]);
 	}
 	catch(const invalid_argument& ia) {
-		cerr << "Error: invalid argument - " << ia.what() << '\n';
+		cerr << "ERROR: invalid argument - " << ia.what() << '\n';
 		exit(EXIT_FAILURE);
 	}
 	
 	if (port_num < 1024 || port_num > 65535) {
-		cerr << "Error: You must choose a port number between 1024 and 65535.\n";
+		cerr << "ERROR: You must choose a port number between 1024 and 65535.\n";
 		exit(EXIT_FAILURE);
 	}
 	
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
 	hints.ai_flags = AI_PASSIVE;		// fill the IP in for me
 	
 	if ((status = getaddrinfo(NULL, argv[1], &hints, &res)) != 0) {
-		cerr << "Error: getaddrinfo error - " << gai_strerror(status) << endl;
+		cerr << "ERROR: getaddrinfo error - " << gai_strerror(status) << endl;
 		exit(EXIT_FAILURE);
 	}
 	
@@ -113,12 +113,12 @@ int main(int argc, char *argv[]) {
 	sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	
 	if (sockfd < 0) {
-		cerr << "Error: Cannot open socket" << endl;
+		cerr << "ERROR: Cannot open socket" << endl;
 		exit(EXIT_FAILURE);
 	}
 	
 	if (bind(sockfd, res->ai_addr, res->ai_addrlen) < 0) {
-        cerr << "Error: bind didn't work" << endl;
+        cerr << "ERROR: bind didn't work" << endl;
         exit(EXIT_FAILURE);
 	}
 	listen(sockfd, 1);

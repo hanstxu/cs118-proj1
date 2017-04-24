@@ -14,7 +14,7 @@ using namespace std;
 
 int main(int argc, char* argv[]) {
 	if (argc != 4) {
-		cerr << "Error: You must give three arguments when initializing the server.\n";
+		cerr << "ERROR: You must give three arguments when initializing the server.\n";
 		exit(EXIT_FAILURE);
 	}
 	
@@ -24,12 +24,12 @@ int main(int argc, char* argv[]) {
 		port_num = stoi(argv[2]);
 	}
 	catch(const invalid_argument& ia) {
-		cerr << "Error: invalid argument - " << ia.what() << '\n';
+		cerr << "ERROR: invalid argument - " << ia.what() << '\n';
 		exit(EXIT_FAILURE);
 	}
 	
 	if (port_num < 1023 || port_num > 65535) {
-		cerr << "Error: You must choose a port number between 1024 and 65535.\n";
+		cerr << "ERROR: You must choose a port number between 1024 and 65535.\n";
 		exit(EXIT_FAILURE);
 	}
 	
@@ -45,14 +45,14 @@ int main(int argc, char* argv[]) {
 	status = getaddrinfo(argv[1], argv[2], &hints, &servinfo);
 	
 	if (status != 0) {
-		cerr << "Error: hostname or ip address is invalid\n";
+		cerr << "ERROR: hostname or ip address is invalid\n";
 		exit(EXIT_FAILURE);
 	}
 	
 	// make a socket
 	int sockfd = socket(servinfo->ai_family, servinfo->ai_socktype, servinfo->ai_protocol);
 	if (sockfd < 0) {
-		cerr << "Error: unable to make a socket" << endl;
+		cerr << "ERROR: unable to make a socket" << endl;
 		freeaddrinfo(servinfo);
 		exit(EXIT_FAILURE);
 	}
@@ -79,14 +79,14 @@ int main(int argc, char* argv[]) {
 			select(sockfd + 1, NULL, &writefds, NULL, &tv);
 			
 			if (!FD_ISSET(sockfd, &writefds)) {
-				cerr << "Error: timeout connecting to server" << endl;
+				cerr << "ERROR: timeout connecting to server" << endl;
 				freeaddrinfo(servinfo);
 				close(sockfd);
 				exit(EXIT_FAILURE);
 			}
 		}
 		else {
-			cerr << "Error: " << strerror(errno) << endl;
+			cerr << "ERROR: " << strerror(errno) << endl;
 			freeaddrinfo(servinfo);
 			close(sockfd);
 			exit(EXIT_FAILURE);
@@ -99,7 +99,7 @@ int main(int argc, char* argv[]) {
 	
 	int fd = open(argv[3], O_RDONLY);
 	if (fd <0) {
-		cerr << "Error: couldn't open file" << endl;
+		cerr << "ERROR: couldn't open file" << endl;
 		freeaddrinfo(servinfo);
 		close(fd);
 		close(sockfd);

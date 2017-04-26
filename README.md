@@ -71,7 +71,7 @@ cplusplus.com, man7.org, and linux.die.net.
 ## Extra Credit
 
 For docker, I hardcoded the port to be 2017 and the directory to be ./save.
-Files should be saved in the same file as the Dockerfile.
+Files should be saved in the same directory as the Dockerfile.
 
 In bash, run the following commands:
 

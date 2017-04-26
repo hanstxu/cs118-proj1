@@ -144,6 +144,5 @@ int main(int argc, char* argv[]) {
 	freeaddrinfo(servinfo);
 	close(sockfd);
 	
-	cerr << "SUCCESS!" << endl;
 	return 0;
 }

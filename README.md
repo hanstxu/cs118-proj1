@@ -76,6 +76,7 @@ Files should be saved in the same directory as the Dockerfile.
 In bash, run the following commands:
 
 $ sudo docker build -t server .
+
 $ sudo docker run -d -v /vagrant:/save -p 2017:2017 server
 
 You can now connect to the server. One such example:

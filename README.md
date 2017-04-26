@@ -67,3 +67,17 @@ Guide to Network Programming.
 To understand BSD sockets, I used Beej's Guide to Network Programming.
 For any other libraries I used, I referenced documentation on
 cplusplus.com, man7.org, and linux.die.net.
+
+## Extra Credit
+
+For docker, I hardcoded the port to be 2017 and the directory to be ./save.
+Files should be saved in the same file as the Dockerfile.
+
+In bash, run the following commands:
+
+$ sudo docker build -t server .
+$ sudo docker run -d -v /vagrant:/save -p 2017:2017 server
+
+You can now connect to the server. One such example:
+
+$ telnet localhost 2017

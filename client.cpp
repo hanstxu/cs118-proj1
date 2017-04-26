@@ -12,9 +12,16 @@
 #include <sys/time.h>	// for the timeval structure
 #include <stdio.h>		// for FILE objects
 #include <cstdio>		// for file reading
+#include <signal.h>		// for signal handling for when server closes down
 using namespace std;
 
 #define BUFFER_SIZE 1024
+
+void sig_handler(int sig_num) {
+	if (sig_num == SIGPIPE)
+		cerr << "ERROR: Server has unexpectedly closed while sending data.\n";
+	exit(1);
+}
 
 int main(int argc, char* argv[]) {
 	if (argc != 4) {
@@ -36,6 +43,10 @@ int main(int argc, char* argv[]) {
 		cerr << "ERROR: You must choose a port number between 1024 and 65535.\n";
 		exit(EXIT_FAILURE);
 	}
+	
+	struct sigaction new_signal;
+	new_signal.sa_handler = sig_handler;
+	sigaction(SIGPIPE, &new_signal, NULL);
 	
 	int status;
 	struct addrinfo hints;

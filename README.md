@@ -15,7 +15,7 @@ server.cpp compiles into a server binary that accepts only two command-line
 arguments. This server listens for any incoming connections and saves any
 files received from a client and stores them in the specified directory.
 
-$ ./server <PORT> <FILE-DIR>
+$ ./server `<PORT>` `<FILE-DIR>`
 
 The first argument is a port number to listen to and the second
 argument is a file directory where to save any files that the server receives
@@ -35,7 +35,7 @@ arguments. This client attempts to make a connection to a specified server and
 port, transfer a specified file over the connection to the server, and close
 the connection immediately afterwards.
 
-$ ./client <HOSTNAME-OR-IP> <PORT> <FILENAME>
+$ ./client `<HOSTNAME-OR-IP>` `<PORT>` `<FILENAME>`
 
 The first argument is the hostname or IP address of the server to connect to.
 The second argument is the port number of the server to connect to. The third

@@ -20,7 +20,7 @@ using namespace std;
 void sig_handler(int sig_num) {
 	if (sig_num == SIGPIPE)
 		cerr << "ERROR: Server has unexpectedly closed while sending data.\n";
-	exit(1);
+	exit(EXIT_FAILURE);
 }
 
 int main(int argc, char* argv[]) {
